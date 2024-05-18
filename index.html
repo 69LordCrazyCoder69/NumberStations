@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT-37c Encoder/Decoder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #decoder-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        textarea,
+        input,
+        button,
+        select {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 1rem;
+        }
+
+        #copyButton {
+            background-color: #4CAF50;
+            /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="decoder-container">
+        <h2>CT-37c Encoder/Decoder</h2>
+        <select id="operationSelect">
+            <option value="decode">Decode</option>
+            <option value="encode">Encode</option>
+        </select>
+        <textarea id="inputText" rows="4" placeholder="Enter text here..."></textarea>
+        <button onclick="performOperation()">Submit</button>
+        <h3>Result:</h3>
+        <div id="outputText" style="white-space: pre-wrap; background: #eaeaea; padding: 10px;"></div>
+        <button id="copyButton" onclick="copyToClipboard()">Copy Text</button>
+    </div>
+
+    <script>
+        function performOperation() {
+            const operation = document.getElementById('operationSelect').value;
+            if (operation === 'decode') {
+                decodeText();
+            } else if (operation === 'encode') {
+                encodeText();
+            }
+        }
+
+        function decodeText() {
+            const decodingDict = {
+                '1': 'A', '2': 'E', '3': 'I', '4': 'N', '5': 'O', '6': 'T',
+                '70': 'B', '71': 'C', '72': 'D', '73': 'F', '74': 'G', '75': 'H',
+                '76': 'J', '77': 'K', '78': 'L', '79': 'M', '80': 'P', '81': 'Q',
+                '82': 'R', '83': 'S', '84': 'U', '85': 'V', '86': 'W', '87': 'X',
+                '88': 'Y', '89': 'Z', '91': '.', '92': ':', '93': "'", '94': '()',
+                '95': '+', '96': '-', '97': '=', '99': ' '
+            };
+
+            let inputText = document.getElementById('inputText').value.trim();
+            // Remove hyphens and spaces from the input text
+            inputText = inputText.replace(/-/g, '').replace(/\s/g, '');
+            let decodedText = '';
+            let i = 0;
+
+            while (i < inputText.length) {
+                let code = '';
+
+                // Check if the next character should be part of a double digit code
+                if (i + 1 < inputText.length && (inputText[i] === '7' || inputText[i] === '8' || inputText[i] === '9')) {
+                    code = inputText.substr(i, 2);
+                    i += 2;
+                } else {
+                    code = inputText[i];
+                    i += 1;
+                }
+
+                // Decode the code and add it to the decoded text
+                decodedText += decodingDict[code] || '';
+            }
+
+            document.getElementById('outputText').textContent = decodedText;
+        }
+
+        function encodeText() {
+            const encodingDict = {
+                'A': '1', 'E': '2', 'I': '3', 'N': '4', 'O': '5', 'T': '6',
+                'B': '70', 'C': '71', 'D': '72', 'F': '73', 'G': '74', 'H': '75',
+                'J': '76', 'K': '77', 'L': '78', 'M': '79', 'P': '80', 'Q': '81',
+                'R': '82', 'S': '83', 'U': '84', 'V': '85', 'W': '86', 'X': '87',
+                'Y': '88', 'Z': '89', '.': '91', ':': '92', "'": '93', '()': '94',
+                '+': '95', '-': '96', '=': '97', 'SPC': '99'
+            };
+
+            let inputText = document.getElementById('inputText').value.toUpperCase();
+            let encodedText = '';
+            for (let char of inputText) {
+                if (char in encodingDict) {
+                    encodedText += encodingDict[char];
+                } else if (char === ' ') {
+                    encodedText += encodingDict['SPC'];
+                }
+            }
+
+            // Pad the encoded text with 9s if needed to make groups of 5 digits
+            let padding = 5 - encodedText.length % 5;
+            if (padding !== 5) {
+                encodedText += '9'.repeat(padding);
+            }
+
+            // Split the encoded text into groups of 5 digits
+            let encodedGroups = [];
+            for (let i = 0; i < encodedText.length; i += 5) {
+                encodedGroups.push(encodedText.substr(i, 5));
+            }
+
+            // Display encoded text
+            document.getElementById('outputText').textContent = encodedGroups.join(' ');
+        }
+
+        function copyToClipboard() {
+            let textToCopy = document.getElementById('outputText').textContent;
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => alert("Text copied to clipboard"))
+                .catch((error) => console.error("Failed to copy text: ", error));
+        }
+    </script>
+</body>
+
+</html>
